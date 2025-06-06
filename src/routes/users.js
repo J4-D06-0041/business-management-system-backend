@@ -1,10 +1,72 @@
 const usersController = require('../controllers/usersController');
+const authenticateToken = require('../middleware/auth');
 
 /**
  * @swagger
- * tags:
- *   name: Users
- *   description: User management and authentication
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         username:
+ *           type: string
+ *           example: johndoe
+ *         password:
+ *           type: string
+ *           example: $2b$10$hashedpassword
+ *         first_name:
+ *           type: string
+ *           example: John
+ *         last_name:
+ *           type: string
+ *           example: Doe
+ *         date_of_birth:
+ *           type: string
+ *           format: date
+ *           example: 1990-01-01
+ *         start_date:
+ *           type: string
+ *           format: date
+ *           example: 2020-06-01
+ *         role:
+ *           type: string
+ *           enum: [super-admin, admin, salesperson]
+ *           example: salesperson
+ *     UserInput:
+ *       type: object
+ *       properties:
+ *         username:
+ *           type: string
+ *           example: johndoe
+ *         password:
+ *           type: string
+ *           example: password123
+ *         first_name:
+ *           type: string
+ *           example: John
+ *         last_name:
+ *           type: string
+ *           example: Doe
+ *         date_of_birth:
+ *           type: string
+ *           format: date
+ *           example: 1990-01-01
+ *         start_date:
+ *           type: string
+ *           format: date
+ *           example: 2020-06-01
+ *         role:
+ *           type: string
+ *           enum: [super-admin, admin, salesperson]
+ *           example: salesperson
  */
 
 /**
@@ -13,6 +75,8 @@ const usersController = require('../controllers/usersController');
  *   get:
  *     summary: Get all users
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of users
@@ -25,6 +89,8 @@ const usersController = require('../controllers/usersController');
  *   post:
  *     summary: Create a new user
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -43,6 +109,8 @@ const usersController = require('../controllers/usersController');
  *   get:
  *     summary: Get user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -62,6 +130,8 @@ const usersController = require('../controllers/usersController');
  *   put:
  *     summary: Update user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -87,6 +157,8 @@ const usersController = require('../controllers/usersController');
  *   delete:
  *     summary: Delete user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -100,6 +172,20 @@ const usersController = require('../controllers/usersController');
  *       404:
  *         description: User not found
  *
+ * /users/me:
+ *   get:
+ *     summary: Get current user info
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *
  * /users/authenticate:
  *   post:
  *     summary: Authenticate a user
@@ -111,9 +197,9 @@ const usersController = require('../controllers/usersController');
  *           schema:
  *             type: object
  *             properties:
- *               email:
+ *               username:
  *                 type: string
- *                 example: user@example.com
+ *                 example: johndoe
  *               password:
  *                 type: string
  *                 example: password123
@@ -162,77 +248,22 @@ const usersController = require('../controllers/usersController');
  *       200:
  *         description: Password reset successful
  */
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       properties:
- *         id:
- *           type: integer
- *           example: 1
- *         username:
- *           type: string
- *           example: johndoe
- *         password:
- *           type: string
- *           example: $2b$10$hashedpassword
- *         first_name:
- *           type: string
- *           example: John
- *         last_name:
- *           type: string
- *           example: Doe
- *         date_of_birth:
- *           type: string
- *           format: date
- *           example: 1990-01-01
- *         start_date:
- *           type: string
- *           format: date
- *           example: 2020-06-01
- *         role:
- *           type: string
- *           enum: [admin, salesperson]
- *           example: salesperson
- *     UserInput:
- *       type: object
- *       properties:
- *         username:
- *           type: string
- *           example: johndoe
- *         password:
- *           type: string
- *           example: password123
- *         first_name:
- *           type: string
- *           example: John
- *         last_name:
- *           type: string
- *           example: Doe
- *         date_of_birth:
- *           type: string
- *           format: date
- *           example: 1990-01-01
- *         start_date:
- *           type: string
- *           format: date
- *           example: 2020-06-01
- *         role:
- *           type: string
- *           enum: [admin, salesperson]
- *           example: salesperson
- */
 function setUserRoutes(app) {
-    app.get('/users', usersController.getAll);
-    app.get('/users/:id', usersController.getById);
-    app.post('/users', usersController.create);
-    app.put('/users/:id', usersController.update);
-    app.delete('/users/:id', usersController.delete);
+    // Protected routes
+    app.get('/users', authenticateToken, usersController.getAll);
+    app.put('/users/:id', authenticateToken, usersController.update);
+    app.post('/users', authenticateToken, usersController.create);
+    app.get('/users/:id', authenticateToken, usersController.getById);
+    app.delete('/users/:id', authenticateToken, usersController.delete);
+
+    // Public routes
     app.post('/users/authenticate', usersController.authenticate);
     app.post('/users/forgot-password', usersController.forgotPassword);
     app.post('/users/reset-password', usersController.resetPassword);
+
+    // Optionally, add a "me" endpoint for session tracking
+    app.get('/users/me', authenticateToken, (req, res) => {
+        res.json({ user: req.user });
+    });
 }
 module.exports = { setUserRoutes };

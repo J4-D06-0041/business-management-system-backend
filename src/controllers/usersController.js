@@ -1,5 +1,6 @@
 const db = require('../db');
 const userService = require('../services/userService');
+const jwt = require('jsonwebtoken');
 
 class UsersController {
     async getAll(req, res) {
@@ -52,13 +53,33 @@ class UsersController {
         }
     }
     async authenticate(req, res) {
+        // Check for existing token
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                // Token is valid and not expired
+                return res.status(200).json({ message: 'Already logged in', user: decoded });
+            } catch (err) {
+                // Token invalid or expired, proceed to normal login
+            }
+        }
+
+        // Normal login flow
         try {
             const { username, password } = req.body;
             const user = await userService.authenticate(username, password);
             if (!user) {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
-            res.json(user);
+            const payload = {
+                id: user.id,
+                username: user.username,
+                role: user.role
+            };
+            const newToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+            res.json({ token: newToken, user: payload });
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
