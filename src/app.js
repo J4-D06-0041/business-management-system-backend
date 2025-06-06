@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const swaggerUi = require('swagger-ui-express');
@@ -17,11 +18,23 @@ const { setUserRoutes } = require('./routes/users');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable CORS for all routes
+app.use(cors());
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.get('/api-docs/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 // Swagger UI endpoint
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(null, { swaggerUrl: '/api-docs/swagger.json' })
+);
 
 setCustomerRoutes(app);
 setEquipmentRoutes(app);
