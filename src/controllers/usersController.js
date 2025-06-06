@@ -1,57 +1,64 @@
 const db = require('../db');
+const userService = require('../services/userService');
 
 class UsersController {
     async getAll(req, res) {
         try {
-            const [rows] = await db.query('SELECT * FROM users');
-            res.json(rows);
+            const users = await userService.getAllUsers();
+            res.json(users);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     }
-
     async getById(req, res) {
         try {
-            const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.params.id]);
-            if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
-            res.json(rows[0]);
+            const user = await userService.getUserById(req.params.id);
+            res.json(user);
         } catch (err) {
+            if (err.message === 'User not found') {
+                return res.status(404).json({ error: err.message });
+            }
             res.status(500).json({ error: err.message });
         }
     }
-
     async create(req, res) {
         try {
-            const { username, password, first_name, last_name, date_of_birth, start_date, role } = req.body;
-            const [result] = await db.query(
-                `INSERT INTO users (username, password, first_name, last_name, date_of_birth, start_date, role) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [username, password, first_name, last_name, date_of_birth, start_date, role]
-            );
-            res.status(201).json({ id: result.insertId });
+            const user = await userService.createUser(req.body);
+            res.status(201).json(user);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     }
-
     async update(req, res) {
         try {
-            const { username, password, first_name, last_name, date_of_birth, start_date, role } = req.body;
-            const [result] = await db.query(
-                `UPDATE users SET username=?, password=?, first_name=?, last_name=?, date_of_birth=?, start_date=?, role=? WHERE id=?`,
-                [username, password, first_name, last_name, date_of_birth, start_date, role, req.params.id]
-            );
-            if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
-            res.json({ message: 'User updated' });
+            const user = await userService.updateUser(req.params.id, req.body);
+            res.json(user);
         } catch (err) {
+            if (err.message === 'User not found') {
+                return res.status(404).json({ error: err.message });
+            }
             res.status(500).json({ error: err.message });
         }
     }
-
     async delete(req, res) {
         try {
-            const [result] = await db.query('DELETE FROM users WHERE id=?', [req.params.id]);
-            if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
-            res.json({ message: 'User deleted' });
+            await userService.deleteUser(req.params.id);
+            res.status(204).send();
+        } catch (err) {
+            if (err.message === 'User not found') {
+                return res.status(404).json({ error: err.message });
+            }
+            res.status(500).json({ error: err.message });
+        }
+    }
+    async authenticate(req, res) {
+        try {
+            const { username, password } = req.body;
+            const user = await userService.authenticate(username, password);
+            if (!user) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+            res.json(user);
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
