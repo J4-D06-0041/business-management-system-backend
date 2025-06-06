@@ -16,6 +16,12 @@ const usersController = require('../controllers/usersController');
  *     responses:
  *       200:
  *         description: List of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
  *   post:
  *     summary: Create a new user
  *     tags: [Users]
@@ -24,14 +30,15 @@ const usersController = require('../controllers/usersController');
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/User'
+ *             $ref: '#/components/schemas/UserInput'
  *     responses:
  *       201:
  *         description: User created
- */
-
-/**
- * @swagger
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *
  * /users/{id}:
  *   get:
  *     summary: Get user by ID
@@ -46,6 +53,12 @@ const usersController = require('../controllers/usersController');
  *     responses:
  *       200:
  *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
  *   put:
  *     summary: Update user by ID
  *     tags: [Users]
@@ -61,10 +74,16 @@ const usersController = require('../controllers/usersController');
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/User'
+ *             $ref: '#/components/schemas/UserInput'
  *     responses:
  *       200:
  *         description: User updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
  *   delete:
  *     summary: Delete user by ID
  *     tags: [Users]
@@ -78,10 +97,9 @@ const usersController = require('../controllers/usersController');
  *     responses:
  *       204:
  *         description: User deleted
- */
-
-/**
- * @swagger
+ *       404:
+ *         description: User not found
+ *
  * /users/authenticate:
  *   post:
  *     summary: Authenticate a user
@@ -95,15 +113,16 @@ const usersController = require('../controllers/usersController');
  *             properties:
  *               email:
  *                 type: string
+ *                 example: user@example.com
  *               password:
  *                 type: string
+ *                 example: password123
  *     responses:
  *       200:
  *         description: Authentication successful
- */
-
-/**
- * @swagger
+ *       401:
+ *         description: Authentication failed
+ *
  * /users/forgot-password:
  *   post:
  *     summary: Request password reset
@@ -117,13 +136,11 @@ const usersController = require('../controllers/usersController');
  *             properties:
  *               email:
  *                 type: string
+ *                 example: user@example.com
  *     responses:
  *       200:
  *         description: Password reset email sent
- */
-
-/**
- * @swagger
+ *
  * /users/reset-password:
  *   post:
  *     summary: Reset password
@@ -137,13 +154,77 @@ const usersController = require('../controllers/usersController');
  *             properties:
  *               token:
  *                 type: string
+ *                 example: reset-token
  *               newPassword:
  *                 type: string
+ *                 example: newPassword123
  *     responses:
  *       200:
  *         description: Password reset successful
  */
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         username:
+ *           type: string
+ *           example: johndoe
+ *         password:
+ *           type: string
+ *           example: $2b$10$hashedpassword
+ *         first_name:
+ *           type: string
+ *           example: John
+ *         last_name:
+ *           type: string
+ *           example: Doe
+ *         date_of_birth:
+ *           type: string
+ *           format: date
+ *           example: 1990-01-01
+ *         start_date:
+ *           type: string
+ *           format: date
+ *           example: 2020-06-01
+ *         role:
+ *           type: string
+ *           enum: [admin, salesperson]
+ *           example: salesperson
+ *     UserInput:
+ *       type: object
+ *       properties:
+ *         username:
+ *           type: string
+ *           example: johndoe
+ *         password:
+ *           type: string
+ *           example: password123
+ *         first_name:
+ *           type: string
+ *           example: John
+ *         last_name:
+ *           type: string
+ *           example: Doe
+ *         date_of_birth:
+ *           type: string
+ *           format: date
+ *           example: 1990-01-01
+ *         start_date:
+ *           type: string
+ *           format: date
+ *           example: 2020-06-01
+ *         role:
+ *           type: string
+ *           enum: [admin, salesperson]
+ *           example: salesperson
+ */
 function setUserRoutes(app) {
     app.get('/users', usersController.getAll);
     app.get('/users/:id', usersController.getById);
