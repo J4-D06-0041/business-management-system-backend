@@ -1,26 +1,21 @@
 const usersController = require('../controllers/usersController');
+
 /**
  * @swagger
  * tags:
  *   name: Users
- *   description: User management endpoints
+ *   description: User management and authentication
  */
 
 /**
  * @swagger
- * /api/users:
+ * /users:
  *   get:
  *     summary: Get all users
  *     tags: [Users]
  *     responses:
  *       200:
  *         description: List of users
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
  *   post:
  *     summary: Create a new user
  *     tags: [Users]
@@ -33,40 +28,33 @@ const usersController = require('../controllers/usersController');
  *     responses:
  *       201:
  *         description: User created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *
- * /api/users/{id}:
+ */
+
+/**
+ * @swagger
+ * /users/{id}:
  *   get:
- *     summary: Get a user by ID
+ *     summary: Get user by ID
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
  *         schema:
  *           type: string
+ *         required: true
  *         description: User ID
  *     responses:
  *       200:
  *         description: User found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       404:
- *         description: User not found
  *   put:
- *     summary: Update a user by ID
+ *     summary: Update user by ID
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
  *         schema:
  *           type: string
+ *         required: true
  *         description: User ID
  *     requestBody:
  *       required: true
@@ -77,54 +65,93 @@ const usersController = require('../controllers/usersController');
  *     responses:
  *       200:
  *         description: User updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       404:
- *         description: User not found
  *   delete:
- *     summary: Delete a user by ID
+ *     summary: Delete user by ID
  *     tags: [Users]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
  *         schema:
  *           type: string
+ *         required: true
  *         description: User ID
  *     responses:
  *       204:
  *         description: User deleted
- *       404:
- *         description: User not found
  */
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: The user ID
- *         name:
- *           type: string
- *           description: The user's name
- *         email:
- *           type: string
- *           description: The user's email
- *       required:
- *         - name
- *         - email
+ * /users/authenticate:
+ *   post:
+ *     summary: Authenticate a user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Authentication successful
  */
+
+/**
+ * @swagger
+ * /users/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset email sent
+ */
+
+/**
+ * @swagger
+ * /users/reset-password:
+ *   post:
+ *     summary: Reset password
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ */
+
 function setUserRoutes(app) {
-    app.get('/api/users', usersController.getAll.bind(usersController));
-    app.get('/api/users/:id', usersController.getById.bind(usersController));
-    app.post('/api/users', usersController.create.bind(usersController));
-    app.put('/api/users/:id', usersController.update.bind(usersController));
-    app.delete('/api/users/:id', usersController.delete.bind(usersController));
+    app.get('/users', usersController.getAll);
+    app.get('/users/:id', usersController.getById);
+    app.post('/users', usersController.create);
+    app.put('/users/:id', usersController.update);
+    app.delete('/users/:id', usersController.delete);
+    app.post('/users/authenticate', usersController.authenticate);
+    app.post('/users/forgot-password', usersController.forgotPassword);
+    app.post('/users/reset-password', usersController.resetPassword);
 }
 module.exports = { setUserRoutes };

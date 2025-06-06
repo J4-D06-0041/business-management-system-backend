@@ -63,6 +63,24 @@ class UsersController {
             res.status(500).json({ error: err.message });
         }
     }
+    async forgotPassword(req, res) {
+        try {
+            const { email } = req.body;
+            await userService.forgotPassword(email);
+            res.status(204).send();
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
+    async resetPassword(req, res) {
+        try {
+            const { token, newPassword } = req.body;
+            await userService.resetPasswordWithToken(token, newPassword);
+            res.status(204).send();
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    }
 }
 
 module.exports = new UsersController();
